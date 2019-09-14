@@ -43,13 +43,6 @@ function addResource(resource) {
 
 function getTasks() {
     return db("tasks_list")
-        .select(
-            "tasks.id as TaskID",
-            "tasks.description As Task_Description",
-            "projects.name as Project_Name",
-            "projects.description as Project_Description",
-            "tasks.completed"
-        )
         .join(
             "tasks",
             "tasks.id",
@@ -60,15 +53,29 @@ function getTasks() {
             "projects.id",
             "tasks_list.project_id"
         )
-
+        .select(
+            "tasks.id as TaskID",
+            "tasks.description As Task_Description",
+            "projects.name as Project_Name",
+            "tasks.notes as Task_Notes",
+            "projects.description as Project_Description",
+            "tasks.completed"
+        ).map(project => projectToBody(project))
 }
 
 function addTask(task) {
     return db("tasks")
-        .insert(resource)
+        .insert(task)
         .then(added => {
             return added[0]
         })
+        .then(task_id =>
+            db("tasks_list")
+                .insert({ task_id: task_id, project_id: id })
+                .then(taskUpdate => {
+                    return taskUpdate;
+                })
+        );
 }
 
 module.exports = {
